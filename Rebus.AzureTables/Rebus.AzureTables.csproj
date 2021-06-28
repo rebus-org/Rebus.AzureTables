@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>Rebus</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>C:\projects-rebus\Rebus.AzureTables\Rebus.AzureTables\Rebus.AzureTables.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Config\" />
+    <Folder Include="AzureTables\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="rebus" Version="6.6.0" />
+  </ItemGroup>
+
+</Project>
