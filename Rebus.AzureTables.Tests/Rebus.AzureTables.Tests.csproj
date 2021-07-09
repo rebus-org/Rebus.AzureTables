@@ -15,4 +15,10 @@
     <ProjectReference Include="..\Rebus.AzureTables\Rebus.AzureTables.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="azure_storage_connection_string.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
