@@ -20,6 +20,7 @@ namespace Rebus.AzureTables.Tests.Contracts
         {
             var tableClient = new TableClient(ConnectionString, DataTableName);
             var storage = new TableStorageSagaStorage(tableClient, new DefaultSagaSerializer());
+            storage.EnsureCreated().GetAwaiter().GetResult();
 
             return storage;
         }

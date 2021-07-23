@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Rebus.AzureTables.Sagas.Serialization;
 using Rebus.Exceptions;
+using Rebus.Logging;
 using Rebus.Sagas;
 using System;
 using System.Collections.Generic;
@@ -20,29 +21,28 @@ namespace Rebus.AzureTables.Sagas
         private readonly ISagaSerializer _sagaSerializer;
         private const string partitionKey = "Saga";
         private const string IdPropertyName = nameof(ISagaData.Id);
+        private readonly ILog _log;
 
         /// <summary>
         /// Creates the saga storage
         /// </summary>
-        /// <param name="connectionString">The connectionstring to the table storage</param>
-        /// <param name="tableName">The name of the table</param>
-        public TableStorageSagaStorage(string connectionString, ISagaSerializer sagaSerializer, string tableName = "SagaData") : this(new TableClient(connectionString, tableName), sagaSerializer)
-        {
-        }
-        /// <summary>
-        /// Creates the saga storage
-        /// </summary>
         /// <param name="tableClient">A TableClient</param>
-        public TableStorageSagaStorage(TableClient tableClient, ISagaSerializer sagaSerializer)
+        public TableStorageSagaStorage(TableClient tableClient, ISagaSerializer sagaSerializer, IRebusLoggerFactory rebusLoggerFactory)
         {
-            this._tableClient = tableClient;
-            this._sagaSerializer = sagaSerializer;
+            if (tableClient == null) throw new ArgumentNullException(nameof(tableClient));
+            if (sagaSerializer == null) throw new ArgumentNullException(nameof(sagaSerializer));
+            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
+
+            _tableClient = tableClient;
+            _sagaSerializer = sagaSerializer;
+            _log = rebusLoggerFactory.GetLogger<TableStorageSagaStorage>();
         }
+
         /// <summary>
         /// Ensurse the table is created in the table storage.
         /// </summary>
         /// <returns></returns>
-        protected async Task EnsureCreated()
+        public async Task EnsureCreated()
         {
             await _tableClient.CreateIfNotExistsAsync();
         }
@@ -72,7 +72,7 @@ namespace Rebus.AzureTables.Sagas
         /// </summary>
         public async Task<ISagaData> Find(Type sagaDataType, string propertyName, object propertyValue)
         {
-            await EnsureCreated();
+            //await EnsureCreated();
             TableEntity entity = default;
             if (propertyName.Equals(IdPropertyName, StringComparison.InvariantCultureIgnoreCase))
             {
@@ -108,7 +108,7 @@ namespace Rebus.AzureTables.Sagas
         /// </summary>
         public async Task Insert(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
         {
-            await EnsureCreated();
+            //await EnsureCreated();
             if (sagaData.Id == Guid.Empty)
             {
                 throw new InvalidOperationException($"Saga data {sagaData.GetType()} has an uninitialized Id property!");
@@ -151,7 +151,7 @@ namespace Rebus.AzureTables.Sagas
         /// </summary>
         public async Task Update(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
         {
-            await EnsureCreated();
+            // await EnsureCreated();
             var currentRevision = sagaData.Revision;
             try
             {
@@ -179,7 +179,6 @@ namespace Rebus.AzureTables.Sagas
 
         private TableEntity ToTableEntity(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties, string partitionKey = partitionKey)
         {
-
             var entity = new TableEntity(partitionKey, sagaData.Id.ToString());
             var indexedProperties = GetPropertiesToIndex(sagaData, correlationProperties);
 
