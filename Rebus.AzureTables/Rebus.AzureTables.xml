@@ -8,7 +8,7 @@
             <summary>
             The default serializer for serializing sql saga data,
             Implement <seealso cref="T:Rebus.AzureTables.Sagas.Serialization.ISagaSerializer"/> to make your own custom serializer and register it using the UseSagaSerializer extension method.
-            <seealso cref="!:Rebus.Config.SqlServerSagaConfigurationExtensions.UseSagaSerializer"/>
+            <seealso cref="M:Rebus.Config.AzureTablesSagaStorageConfigurationExtensions.UseSagaSerializer(Rebus.Config.StandardConfigurer{Rebus.Sagas.ISagaStorage},Rebus.AzureTables.Sagas.Serialization.ISagaSerializer)"/>
             </summary>
         </member>
         <member name="M:Rebus.AzureTables.Sagas.Serialization.DefaultSagaSerializer.SerializeToString(Rebus.Sagas.ISagaData)">
@@ -46,11 +46,12 @@
             Implementation of <see cref="T:Rebus.Sagas.ISagaStorage"/> that uses the Azure Table Storage to store data
             </summary>
         </member>
-        <member name="M:Rebus.AzureTables.Sagas.TableStorageSagaStorage.#ctor(Azure.Data.Tables.TableClient,Rebus.AzureTables.Sagas.Serialization.ISagaSerializer,Rebus.Logging.IRebusLoggerFactory)">
+        <member name="M:Rebus.AzureTables.Sagas.TableStorageSagaStorage.#ctor(Azure.Data.Tables.TableClient,Rebus.AzureTables.Sagas.Serialization.ISagaSerializer)">
             <summary>
             Creates the saga storage
             </summary>
             <param name="tableClient">A TableClient</param>
+            <param name="sagaSerializer">The saga serializer to use</param>
         </member>
         <member name="M:Rebus.AzureTables.Sagas.TableStorageSagaStorage.EnsureCreated">
             <summary>

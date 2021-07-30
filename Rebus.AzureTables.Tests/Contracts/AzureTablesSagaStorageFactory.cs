@@ -1,7 +1,6 @@
 ﻿using Azure.Data.Tables;
 using Rebus.AzureTables.Sagas;
 using Rebus.AzureTables.Sagas.Serialization;
-using Rebus.Logging;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts.Sagas;
 
@@ -19,9 +18,8 @@ namespace Rebus.AzureTables.Tests.Contracts
 
         public ISagaStorage GetSagaStorage()
         {
-            var consoleLoggerFactory = new ConsoleLoggerFactory(true);
             var tableClient = new TableClient(ConnectionString, DataTableName);
-            var storage = new TableStorageSagaStorage(tableClient, new DefaultSagaSerializer(), consoleLoggerFactory);
+            var storage = new TableStorageSagaStorage(tableClient, new DefaultSagaSerializer());
             storage.EnsureCreated().GetAwaiter().GetResult();
 
             return storage;

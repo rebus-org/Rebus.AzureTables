@@ -4,7 +4,6 @@ using Azure.Core;
 using Azure.Data.Tables;
 using Rebus.AzureTables.Sagas;
 using Rebus.AzureTables.Sagas.Serialization;
-using Rebus.Logging;
 using Rebus.Sagas;
 
 namespace Rebus.Config
@@ -26,9 +25,8 @@ namespace Rebus.Config
 
             configurer.Register(c =>
             {
-                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
                 var serializer = c.Has<ISagaSerializer>(false) ? c.Get<ISagaSerializer>() : new DefaultSagaSerializer();
-                var sagaStorage = new TableStorageSagaStorage(new TableClient(connectionString, tableName), serializer, rebusLoggerFactory);
+                var sagaStorage = new TableStorageSagaStorage(new TableClient(connectionString, tableName), serializer);
 
                 if (automaticallyCreateTables) {
                     sagaStorage.EnsureCreated().GetAwaiter().GetResult();
@@ -50,9 +48,8 @@ namespace Rebus.Config
 
             configurer.Register(c =>
             {
-                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
                 var serializer = c.Has<ISagaSerializer>(false) ? c.Get<ISagaSerializer>() : new DefaultSagaSerializer();
-                var sagaStorage = new TableStorageSagaStorage(new TableClient(endpoint, tableName, credentials), serializer, rebusLoggerFactory);
+                var sagaStorage = new TableStorageSagaStorage(new TableClient(endpoint, tableName, credentials), serializer);
 
                 if (automaticallyCreateTables)
                 {
@@ -75,9 +72,8 @@ namespace Rebus.Config
 
             configurer.Register(c =>
             {
-                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
                 var serializer = c.Has<ISagaSerializer>(false) ? c.Get<ISagaSerializer>() : new DefaultSagaSerializer();
-                var sagaStorage = new TableStorageSagaStorage(new TableClient(endpoint, tableName, credentials), serializer, rebusLoggerFactory);
+                var sagaStorage = new TableStorageSagaStorage(new TableClient(endpoint, tableName, credentials), serializer);
 
                 if (automaticallyCreateTables)
                 {
@@ -99,9 +95,8 @@ namespace Rebus.Config
 
             configurer.Register(c =>
             {
-                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
                 var serializer = c.Has<ISagaSerializer>(false) ? c.Get<ISagaSerializer>() : new DefaultSagaSerializer();
-                var sagaStorage = new TableStorageSagaStorage(new TableClient(endpoint, credentials), serializer, rebusLoggerFactory );
+                var sagaStorage = new TableStorageSagaStorage(new TableClient(endpoint, credentials), serializer );
 
                 if (automaticallyCreateTables)
                 {
