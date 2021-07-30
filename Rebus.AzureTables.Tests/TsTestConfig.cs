@@ -1,22 +1,41 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Rebus.AzureTables.Tests
 {
     static class TsTestConfig
     {
-        static TsTestConfig()
+        static readonly Lazy<string> LazyConnectionString = new(() =>
         {
-            ConnectionString = GetConnectionString();
+            var filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "azure_storage_connection_string.txt");
 
-            //ConnectionStringFromFileOrNull(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "asb_connection_string.txt"))
-            //                   ?? ConnectionStringFromEnvironmentVariable("rebus2_asb_connection_string")
-            //                   ?? throw new ConfigurationErrorsException("Could not find Azure Service Bus connection string!");
-        }
+            if (File.Exists(filePath))
+            {
+                return ConnectionStringFromFile(filePath);
+            }
+
+            const string variableName = "rebus2_ts_connection_string";
+            var environmentVariable = Environment.GetEnvironmentVariable(variableName);
+
+            if (!string.IsNullOrWhiteSpace(environmentVariable))
+            {
+                return ConnectionStringFromEnvironmentVariable(variableName);
+            }
+
+            Console.WriteLine($@"No connection string was found in file with path
+
+    {filePath}
+
+and the environment variable
+
+    rebus2_ts_connection_string
+
+was empty.
+
+The local development storage will be used.");
+
+            return "UseDevelopmentStorage=true";
+        });
 
         static string GetConnectionString()
         {
@@ -31,6 +50,8 @@ namespace Rebus.AzureTables.Tests
             var environmentVariable = Environment.GetEnvironmentVariable(variableName);
 
             if (!string.IsNullOrWhiteSpace(environmentVariable)) return ConnectionStringFromEnvironmentVariable(variableName);
+
+            return "UseDevelopmentStorage=true";
 
             throw new ApplicationException($@"Could not get Table Storage connection string. Tried to load from file
 
@@ -47,7 +68,7 @@ namespace Rebus.AzureTables.Tests
             ");
         }
 
-        public static string ConnectionString { get; }
+        public static string ConnectionString => LazyConnectionString.Value;
 
         static string ConnectionStringFromFile(string filePath)
         {
