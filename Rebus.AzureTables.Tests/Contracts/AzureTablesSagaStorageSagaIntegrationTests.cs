@@ -4,5 +4,5 @@ using Rebus.Tests.Contracts.Sagas;
 namespace Rebus.AzureTables.Tests.Contracts
 {
     [TestFixture]
-    public class SqlServerSagaStorageConcurrencyHandling : ConcurrencyHandling<AzureTablesSagaStorageFactory> { }
+    public class AzureTablesSagaStorageSagaIntegrationTests : SagaIntegrationTests<AzureTablesSagaStorageFactory> { }
 }

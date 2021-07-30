@@ -11,10 +11,10 @@
 
   <ItemGroup>
     <Folder Include="Config\" />
-    <Folder Include="AzureTables\" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Data.Tables" Version="12.1.0" />
     <PackageReference Include="rebus" Version="6.6.0" />
   </ItemGroup>
 
