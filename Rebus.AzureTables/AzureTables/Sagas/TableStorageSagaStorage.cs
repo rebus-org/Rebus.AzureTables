@@ -1,5 +1,4 @@
 ﻿using Azure.Data.Tables;
-using Newtonsoft.Json;
 using Rebus.AzureTables.Sagas.Serialization;
 using Rebus.Exceptions;
 using Rebus.Logging;
@@ -7,7 +6,6 @@ using Rebus.Sagas;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Rebus.AzureTables.Sagas
@@ -17,7 +15,7 @@ namespace Rebus.AzureTables.Sagas
     /// </summary>
     public class TableStorageSagaStorage : ISagaStorage
     {
-        private readonly TableClient _tableClient;
+        private readonly ITableClientFactory _tableClientFactory;
         private readonly ISagaSerializer _sagaSerializer;
         private const string partitionKey = "Saga";
         private const string IdPropertyName = nameof(ISagaData.Id);
@@ -27,24 +25,15 @@ namespace Rebus.AzureTables.Sagas
         /// Creates the saga storage
         /// </summary>
         /// <param name="tableClient">A TableClient</param>
-        public TableStorageSagaStorage(TableClient tableClient, ISagaSerializer sagaSerializer, IRebusLoggerFactory rebusLoggerFactory)
+        public TableStorageSagaStorage(ITableClientFactory tableClientFactory, ISagaSerializer sagaSerializer, IRebusLoggerFactory rebusLoggerFactory)
         {
-            if (tableClient == null) throw new ArgumentNullException(nameof(tableClient));
+            if (tableClientFactory == null) throw new ArgumentNullException(nameof(tableClientFactory));
             if (sagaSerializer == null) throw new ArgumentNullException(nameof(sagaSerializer));
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
 
-            _tableClient = tableClient;
+            _tableClientFactory = tableClientFactory;
             _sagaSerializer = sagaSerializer;
             _log = rebusLoggerFactory.GetLogger<TableStorageSagaStorage>();
-        }
-
-        /// <summary>
-        /// Ensurse the table is created in the table storage.
-        /// </summary>
-        /// <returns></returns>
-        public async Task EnsureCreated()
-        {
-            await _tableClient.CreateIfNotExistsAsync();
         }
 
         /// <summary>
@@ -53,7 +42,7 @@ namespace Rebus.AzureTables.Sagas
         public async Task Delete(ISagaData sagaData)
         {
             var currentRevision = sagaData.Revision;
-            var currentData = await _tableClient.GetEntityAsync<TableEntity>(partitionKey, sagaData.Id.ToString(), new[] { "Revision", "ETag" });
+            var currentData = await _tableClientFactory.GetTableClient(sagaData.GetType()).GetEntityAsync<TableEntity>(partitionKey, sagaData.Id.ToString(), new[] { "Revision", "ETag" });
             if (currentData == null)
             {
                 throw new ConcurrencyException($"Saga data with ID {sagaData.Id} does not exist!");
@@ -64,7 +53,7 @@ namespace Rebus.AzureTables.Sagas
             }
             sagaData.Revision++; // Needed to be compliant with the tests.
             //await EnsureCreated();
-            await _tableClient.DeleteEntityAsync(partitionKey, sagaData.Id.ToString());
+            await _tableClientFactory.GetTableClient(sagaData.GetType()).DeleteEntityAsync(partitionKey, sagaData.Id.ToString());
         }
 
         /// <summary>
@@ -80,12 +69,12 @@ namespace Rebus.AzureTables.Sagas
                     ? (string)propertyValue
                     : ((Guid)propertyValue).ToString();
 
-                entity = _tableClient.Query<TableEntity>(filter: $"{nameof(TableEntity.RowKey)} eq '{propertyValue?.ToString() ?? ""}'", select: new[] { "SagaData" }).SingleOrDefault();
+                entity = _tableClientFactory.GetTableClient(sagaDataType).Query<TableEntity>(filter: $"{nameof(TableEntity.RowKey)} eq '{propertyValue?.ToString() ?? ""}'", select: new[] { "SagaData" }).SingleOrDefault();
 
             }
             else
             {
-                entity = _tableClient.Query<TableEntity>(filter: $"{propertyName} eq '{propertyValue?.ToString() ?? ""}'", select: new[] { "SagaData" }).SingleOrDefault();
+                entity = _tableClientFactory.GetTableClient(sagaDataType).Query<TableEntity>(filter: $"{propertyName} eq '{propertyValue?.ToString() ?? ""}'", select: new[] { "SagaData" }).SingleOrDefault();
             }
 
             if (entity != null && entity.TryGetValue("SagaData", out object data))
@@ -143,7 +132,7 @@ namespace Rebus.AzureTables.Sagas
 
             var entity = ToTableEntity(sagaData, correlationProperties);
 
-            await _tableClient.AddEntityAsync(entity);
+            await _tableClientFactory.GetTableClient(sagaData.GetType()).AddEntityAsync(entity);
         }
 
         /// <summary>
@@ -155,7 +144,7 @@ namespace Rebus.AzureTables.Sagas
             var currentRevision = sagaData.Revision;
             try
             {
-                var currentData = await _tableClient.GetEntityAsync<TableEntity>(partitionKey, sagaData.Id.ToString(), new[] { "Revision", "ETag" });
+                var currentData = await _tableClientFactory.GetTableClient(sagaData.GetType()).GetEntityAsync<TableEntity>(partitionKey, sagaData.Id.ToString(), new[] { "Revision", "ETag" });
                 if (currentData == null)
                 {
                     throw new ConcurrencyException($"Saga data with ID {sagaData.Id} does not exist!");
@@ -167,7 +156,7 @@ namespace Rebus.AzureTables.Sagas
                 // Increment Revision
                 sagaData.Revision++;
                 var entity = ToTableEntity(sagaData, correlationProperties);
-                await _tableClient.UpdateEntityAsync(entity, currentData.Value.ETag, TableUpdateMode.Replace);
+                await _tableClientFactory.GetTableClient(sagaData.GetType()).UpdateEntityAsync(entity, currentData.Value.ETag, TableUpdateMode.Replace);
             }
             catch
             {

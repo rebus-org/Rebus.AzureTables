@@ -23,19 +23,16 @@ namespace Rebus.Config
             if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
             if (tableName == null) throw new ArgumentNullException(nameof(tableName));
 
-
-            configurer.Register(c =>
-            {
-                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                var serializer = c.Has<ISagaSerializer>(false) ? c.Get<ISagaSerializer>() : new DefaultSagaSerializer();
-                var sagaStorage = new TableStorageSagaStorage(new TableClient(connectionString, tableName), serializer, rebusLoggerFactory);
-
-                if (automaticallyCreateTables) {
-                    sagaStorage.EnsureCreated().GetAwaiter().GetResult();
+            configurer.OtherService<ITableClientFactory>().Register(c => {
+                if (automaticallyCreateTables)
+                {
+                    return new AutoCreateConnectionStringTableClientFactory(connectionString);
                 }
 
-                return sagaStorage;
+                return new TableClientFactory(new TableClient(connectionString, tableName));
             });
+            configurer.RegisterTableClient<ISagaData>(connectionString, tableName);
+            configurer.StoreInAzureTables();
         }
 
         /// <summary>
@@ -48,19 +45,15 @@ namespace Rebus.Config
             if (credentials == null) throw new ArgumentNullException(nameof(credentials));
             if (tableName == null) throw new ArgumentNullException(nameof(tableName));
 
-            configurer.Register(c =>
-            {
-                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                var serializer = c.Has<ISagaSerializer>(false) ? c.Get<ISagaSerializer>() : new DefaultSagaSerializer();
-                var sagaStorage = new TableStorageSagaStorage(new TableClient(endpoint, tableName, credentials), serializer, rebusLoggerFactory);
-
+            configurer.OtherService<ITableClientFactory>().Register(c => {
                 if (automaticallyCreateTables)
                 {
-                    sagaStorage.EnsureCreated().GetAwaiter().GetResult();
+                    return new AutoCreateTokenCredentialTableClientFactory(endpoint, credentials);
                 }
 
-                return sagaStorage;
+                return new TableClientFactory(new TableClient(endpoint, tableName, credentials));
             });
+            configurer.StoreInAzureTables();
         }
 
         /// <summary>
@@ -73,19 +66,15 @@ namespace Rebus.Config
             if (credentials == null) throw new ArgumentNullException(nameof(credentials));
             if (tableName == null) throw new ArgumentNullException(nameof(tableName));
 
-            configurer.Register(c =>
-            {
-                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                var serializer = c.Has<ISagaSerializer>(false) ? c.Get<ISagaSerializer>() : new DefaultSagaSerializer();
-                var sagaStorage = new TableStorageSagaStorage(new TableClient(endpoint, tableName, credentials), serializer, rebusLoggerFactory);
-
+            configurer.OtherService<ITableClientFactory>().Register(c => {
                 if (automaticallyCreateTables)
                 {
-                    sagaStorage.EnsureCreated().GetAwaiter().GetResult();
+                    return new AutoCreateTTableSharedKeyCredentialTableClientFactory(endpoint, credentials);
                 }
 
-                return sagaStorage;
+                return new TableClientFactory(new TableClient(endpoint, tableName, credentials));
             });
+            configurer.StoreInAzureTables();
         }
 
         /// <summary>
@@ -96,20 +85,79 @@ namespace Rebus.Config
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             if (endpoint == null) throw new ArgumentNullException(nameof(endpoint));
             if (credentials == null) throw new ArgumentNullException(nameof(credentials));
+            configurer.OtherService<ITableClientFactory>().Register(c =>  new TableClientFactory(new TableClient(endpoint, credentials)));
+            configurer.StoreInAzureTables();
+        }
+        
+        /// <summary>
+        /// Configures saga to use your own custom saga serializer
+        /// </summary>
+        public static void RegisterTableClient<T>(this StandardConfigurer<ISagaStorage> configurer, TableClient client, bool automaticallyCreateTables = true) where T : ISagaData
+        {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            if (client == null) throw new ArgumentNullException(nameof(client));
 
-            configurer.Register(c =>
-            {
-                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                var serializer = c.Has<ISagaSerializer>(false) ? c.Get<ISagaSerializer>() : new DefaultSagaSerializer();
-                var sagaStorage = new TableStorageSagaStorage(new TableClient(endpoint, credentials), serializer, rebusLoggerFactory );
+            configurer.OtherService<ITableClientFactory>().Decorate(c => {
+                var factory = c.Get<ITableClientFactory>();
 
                 if (automaticallyCreateTables)
                 {
-                    sagaStorage.EnsureCreated().GetAwaiter().GetResult();
+                    client.CreateIfNotExists();
                 }
 
-                return sagaStorage;
+                factory.RegisterTableClient(typeof(T), client);
+                return factory;
             });
+        }
+
+        /// <summary>
+        /// Registers a TableClient for a SagaDataType
+        /// </summary>
+        public static void RegisterTableClient<T>(this StandardConfigurer<ISagaStorage> configurer, string connectionString, string tableName = "SagaData", bool automaticallyCreateTables = true) where T : ISagaData
+        {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
+            if (tableName == null) throw new ArgumentNullException(nameof(tableName));
+
+            configurer.RegisterTableClient<T>(new TableClient(connectionString, tableName), automaticallyCreateTables);
+        }
+
+        /// <summary>
+        /// Registers a TableClient for a SagaDataType
+        /// </summary>
+        public static void RegisterTableClient<T>(this StandardConfigurer<ISagaStorage> configurer, Uri endpoint, TokenCredential credentials, string tableName = "SagaData", bool automaticallyCreateTables = true) where T: ISagaData
+        {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            if (endpoint == null) throw new ArgumentNullException(nameof(endpoint));
+            if (credentials == null) throw new ArgumentNullException(nameof(credentials));
+            if (tableName == null) throw new ArgumentNullException(nameof(tableName));
+
+            configurer.RegisterTableClient<T>(new TableClient(endpoint, tableName, credentials), automaticallyCreateTables);
+        }
+
+        /// <summary>
+        /// Registers a TableClient for a SagaDataType
+        /// </summary>
+        public static void RegisterTableClient<T>(this StandardConfigurer<ISagaStorage> configurer, Uri endpoint, TableSharedKeyCredential credentials, string tableName = "SagaData", bool automaticallyCreateTables = true) where T : ISagaData
+        {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            if (endpoint == null) throw new ArgumentNullException(nameof(endpoint));
+            if (credentials == null) throw new ArgumentNullException(nameof(credentials));
+            if (tableName == null) throw new ArgumentNullException(nameof(tableName));
+
+            configurer.RegisterTableClient<T>(new TableClient(endpoint, tableName, credentials), automaticallyCreateTables);
+        }
+
+        /// <summary>
+        /// Registers a TableClient for a SagaDataType
+        /// </summary>
+        public static void RegisterTableClient<T>(this StandardConfigurer<ISagaStorage> configurer, Uri endpoint, AzureSasCredential credentials, bool automaticallyCreateTables = true) where T : ISagaData
+        {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            if (endpoint == null) throw new ArgumentNullException(nameof(endpoint));
+            if (credentials == null) throw new ArgumentNullException(nameof(credentials));
+
+            configurer.RegisterTableClient<T>(new TableClient(endpoint, credentials), automaticallyCreateTables);
         }
 
         /// <summary>
@@ -122,6 +170,21 @@ namespace Rebus.Config
             var serializerInstance = serializer ?? new DefaultSagaSerializer();
 
             configurer.OtherService<ISagaSerializer>().Decorate(c => serializerInstance);
+        }
+
+        static void StoreInAzureTables(this StandardConfigurer<ISagaStorage> configurer)
+        {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+
+            configurer.Register(c =>
+            {
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                var serializer = c.Has<ISagaSerializer>(false) ? c.Get<ISagaSerializer>() : new DefaultSagaSerializer();
+                var tableClientFactory = c.Get<ITableClientFactory>();
+                var sagaStorage = new TableStorageSagaStorage(tableClientFactory, serializer, rebusLoggerFactory);
+
+                return sagaStorage;
+            });
         }
     }
 }

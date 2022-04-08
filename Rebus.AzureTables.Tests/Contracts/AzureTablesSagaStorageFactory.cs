@@ -21,8 +21,9 @@ namespace Rebus.AzureTables.Tests.Contracts
         {
             var consoleLoggerFactory = new ConsoleLoggerFactory(true);
             var tableClient = new TableClient(ConnectionString, DataTableName);
-            var storage = new TableStorageSagaStorage(tableClient, new DefaultSagaSerializer(), consoleLoggerFactory);
-            storage.EnsureCreated().GetAwaiter().GetResult();
+            var factory = new TableClientFactory(tableClient);
+            var storage = new TableStorageSagaStorage(factory, new DefaultSagaSerializer(), consoleLoggerFactory);
+            tableClient.CreateIfNotExists();
 
             return storage;
         }
