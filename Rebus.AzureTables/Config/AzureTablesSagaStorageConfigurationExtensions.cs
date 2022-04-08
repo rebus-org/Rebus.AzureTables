@@ -124,7 +124,7 @@ namespace Rebus.Config
         /// <summary>
         /// Registers a TableClient for a SagaDataType
         /// </summary>
-        public static void RegisterTableClient<T>(this StandardConfigurer<ISagaStorage> configurer, string connectionString, string tableName = "SagaData", bool automaticallyCreateTables = true) where T : ISagaData
+        public static void RegisterTableClient<T>(this StandardConfigurer<ISagaStorage> configurer, string connectionString, string tableName, bool automaticallyCreateTables = true) where T : ISagaData
         {
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
@@ -136,7 +136,7 @@ namespace Rebus.Config
         /// <summary>
         /// Registers a TableClient for a SagaDataType
         /// </summary>
-        public static void RegisterTableClient<T>(this StandardConfigurer<ISagaStorage> configurer, Uri endpoint, TokenCredential credentials, string tableName = "SagaData", bool automaticallyCreateTables = true) where T: ISagaData
+        public static void RegisterTableClient<T>(this StandardConfigurer<ISagaStorage> configurer, Uri endpoint, TokenCredential credentials, string tableName, bool automaticallyCreateTables = true) where T: ISagaData
         {
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             if (endpoint == null) throw new ArgumentNullException(nameof(endpoint));
@@ -149,7 +149,7 @@ namespace Rebus.Config
         /// <summary>
         /// Registers a TableClient for a SagaDataType
         /// </summary>
-        public static void RegisterTableClient<T>(this StandardConfigurer<ISagaStorage> configurer, Uri endpoint, TableSharedKeyCredential credentials, string tableName = "SagaData", bool automaticallyCreateTables = true) where T : ISagaData
+        public static void RegisterTableClient<T>(this StandardConfigurer<ISagaStorage> configurer, Uri endpoint, TableSharedKeyCredential credentials, string tableName, bool automaticallyCreateTables = true) where T : ISagaData
         {
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             if (endpoint == null) throw new ArgumentNullException(nameof(endpoint));
