@@ -16,19 +16,23 @@ namespace Rebus.Config
         /// <summary>
         /// Configures Rebus to use Azure Storage Tables to store saga data
         /// </summary>
-        public static void StoreInAzureTables(this StandardConfigurer<ISagaStorage> configurer, string connectionString, string tableName = "SagaData", bool automaticallyCreateTables = true)
+        public static void StoreInAzureTables(this StandardConfigurer<ISagaStorage> configurer, string connectionString, string tableName = "SagaData", bool automaticallyCreateTables = true, bool automaticallyGenerateClients = false)
         {
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
             if (tableName == null) throw new ArgumentNullException(nameof(tableName));
 
             configurer.OtherService<ITableClientFactory>().Register(c => {
-                if (automaticallyCreateTables)
+                if (automaticallyGenerateClients)
                 {
                     return new AutoCreateConnectionStringTableClientFactory(connectionString);
                 }
-
-                return new TableClientFactory(new TableClient(connectionString, tableName));
+                var tableClient = new TableClient(connectionString, tableName);
+                if (automaticallyCreateTables)
+                {
+                    tableClient.CreateIfNotExists();
+                }
+                return new TableClientFactory(tableClient);
             });
             configurer.RegisterTableClient<ISagaData>(connectionString, tableName);
             configurer.StoreInAzureTables();
@@ -37,7 +41,7 @@ namespace Rebus.Config
         /// <summary>
         /// Configures Rebus to use Azure Storage Tables to store saga data
         /// </summary>
-        public static void StoreInAzureTables(this StandardConfigurer<ISagaStorage> configurer, Uri endpoint, TokenCredential credentials, string tableName = "SagaData", bool automaticallyCreateTables = true)
+        public static void StoreInAzureTables(this StandardConfigurer<ISagaStorage> configurer, Uri endpoint, TokenCredential credentials, string tableName = "SagaData", bool automaticallyCreateTables = true, bool automaticallyGenerateClients = false)
         {
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             if (endpoint == null) throw new ArgumentNullException(nameof(endpoint));
@@ -45,12 +49,16 @@ namespace Rebus.Config
             if (tableName == null) throw new ArgumentNullException(nameof(tableName));
 
             configurer.OtherService<ITableClientFactory>().Register(c => {
-                if (automaticallyCreateTables)
+                if (automaticallyGenerateClients)
                 {
                     return new AutoCreateTokenCredentialTableClientFactory(endpoint, credentials);
                 }
-
-                return new TableClientFactory(new TableClient(endpoint, tableName, credentials));
+                var tableClient = new TableClient(endpoint, tableName, credentials);
+                if (automaticallyCreateTables)
+                {
+                    tableClient.CreateIfNotExists();
+                }
+                return new TableClientFactory(tableClient);
             });
             configurer.StoreInAzureTables();
         }
@@ -58,7 +66,7 @@ namespace Rebus.Config
         /// <summary>
         /// Configures Rebus to use Azure Storage Tables to store saga data
         /// </summary>
-        public static void StoreInAzureTables(this StandardConfigurer<ISagaStorage> configurer, Uri endpoint, TableSharedKeyCredential credentials, string tableName = "SagaData", bool automaticallyCreateTables = true)
+        public static void StoreInAzureTables(this StandardConfigurer<ISagaStorage> configurer, Uri endpoint, TableSharedKeyCredential credentials, string tableName = "SagaData", bool automaticallyCreateTables = true, bool automaticallyGenerateClients = false)
         {
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             if (endpoint == null) throw new ArgumentNullException(nameof(endpoint));
@@ -66,12 +74,16 @@ namespace Rebus.Config
             if (tableName == null) throw new ArgumentNullException(nameof(tableName));
 
             configurer.OtherService<ITableClientFactory>().Register(c => {
-                if (automaticallyCreateTables)
+                if (automaticallyGenerateClients)
                 {
                     return new AutoCreateTTableSharedKeyCredentialTableClientFactory(endpoint, credentials);
                 }
-
-                return new TableClientFactory(new TableClient(endpoint, tableName, credentials));
+                var tableClient = new TableClient(endpoint, tableName, credentials);
+                if (automaticallyCreateTables)
+                {
+                    tableClient.CreateIfNotExists();
+                }
+                return new TableClientFactory(tableClient);
             });
             configurer.StoreInAzureTables();
         }
