@@ -1,12 +1,12 @@
 ﻿using Azure.Data.Tables;
 using Rebus.AzureTables.Sagas.Serialization;
 using Rebus.Exceptions;
-using Rebus.Logging;
 using Rebus.Sagas;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+// ReSharper disable EmptyGeneralCatchClause
 
 namespace Rebus.AzureTables.Sagas
 {
@@ -19,21 +19,16 @@ namespace Rebus.AzureTables.Sagas
         private readonly ISagaSerializer _sagaSerializer;
         private const string partitionKey = "Saga";
         private const string IdPropertyName = nameof(ISagaData.Id);
-        private readonly ILog _log;
 
         /// <summary>
         /// Creates the saga storage
         /// </summary>
-        /// <param name="tableClient">A TableClient</param>
-        public TableStorageSagaStorage(ITableClientFactory tableClientFactory, ISagaSerializer sagaSerializer, IRebusLoggerFactory rebusLoggerFactory)
+        /// <param name="tableClientFactory">A TableClientFactory</param>
+        /// <param name="sagaSerializer">The saga serializer to use</param>
+        public TableStorageSagaStorage(ITableClientFactory tableClientFactory, ISagaSerializer sagaSerializer)
         {
-            if (tableClientFactory == null) throw new ArgumentNullException(nameof(tableClientFactory));
-            if (sagaSerializer == null) throw new ArgumentNullException(nameof(sagaSerializer));
-            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
-
-            _tableClientFactory = tableClientFactory;
-            _sagaSerializer = sagaSerializer;
-            _log = rebusLoggerFactory.GetLogger<TableStorageSagaStorage>();
+            _tableClientFactory = tableClientFactory ?? throw new ArgumentNullException(nameof(tableClientFactory));
+            _sagaSerializer = sagaSerializer ??throw new ArgumentNullException(nameof(sagaSerializer));
         }
 
         /// <summary>
@@ -61,35 +56,34 @@ namespace Rebus.AzureTables.Sagas
         /// </summary>
         public async Task<ISagaData> Find(Type sagaDataType, string propertyName, object propertyValue)
         {
-            //await EnsureCreated();
-            TableEntity entity = default;
-            if (propertyName.Equals(IdPropertyName, StringComparison.InvariantCultureIgnoreCase))
+            // use built-in table entity row key if we're querying by the saga data's ID
+            var tableEntityPropertyKey = propertyName.Equals(IdPropertyName, StringComparison.InvariantCultureIgnoreCase)
+                    ? nameof(TableEntity.RowKey)
+                    : propertyName;
+
+            var query = _tableClientFactory.GetTableClient(sagaDataType).QueryAsync<TableEntity>(
+                filter: $"{tableEntityPropertyKey} eq '{propertyValue?.ToString() ?? ""}'",
+                select: new[] { "SagaData" },
+                maxPerPage: 1 //< no need to fetch more than this, ever
+            );
+
+            await using var asyncEnumerator = query.GetAsyncEnumerator();
+
+            if (!await asyncEnumerator.MoveNextAsync()) return null;
+
+            var entity = asyncEnumerator.Current;
+
+            if (entity == null || !entity.TryGetValue("SagaData", out var data)) return null;
+
+            try
             {
-                string sagaId = propertyValue is string
-                    ? (string)propertyValue
-                    : ((Guid)propertyValue).ToString();
-
-                entity = _tableClientFactory.GetTableClient(sagaDataType).Query<TableEntity>(filter: $"{nameof(TableEntity.RowKey)} eq '{propertyValue?.ToString() ?? ""}'", select: new[] { "SagaData" }).SingleOrDefault();
-
+                return _sagaSerializer.DeserializeFromString(sagaDataType, data.ToString());
             }
-            else
+            catch (Exception exception)
             {
-                entity = _tableClientFactory.GetTableClient(sagaDataType).Query<TableEntity>(filter: $"{propertyName} eq '{propertyValue?.ToString() ?? ""}'", select: new[] { "SagaData" }).SingleOrDefault();
+                throw new FormatException($"Table entity {entity} could not be deserialized into {sagaDataType}",
+                    exception);
             }
-
-            if (entity != null && entity.TryGetValue("SagaData", out object data))
-            {
-                try
-                {
-                    var sagaData = this._sagaSerializer.DeserializeFromString(sagaDataType, data.ToString());
-                    return sagaData;
-                }
-                catch
-                {
-                }
-            }
-
-            return null;
         }
 
         /// <summary>
@@ -97,7 +91,6 @@ namespace Rebus.AzureTables.Sagas
         /// </summary>
         public async Task Insert(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
         {
-            //await EnsureCreated();
             if (sagaData.Id == Guid.Empty)
             {
                 throw new InvalidOperationException($"Saga data {sagaData.GetType()} has an uninitialized Id property!");
@@ -107,28 +100,6 @@ namespace Rebus.AzureTables.Sagas
             {
                 throw new InvalidOperationException($"Attempted to insert saga data with ID {sagaData.Id} and revision {sagaData.Revision}, but revision must be 0 on first insert!");
             }
-
-            /*var filter = correlationProperties
-                .Select(p => p.PropertyName)
-                .Select(path =>
-                {
-                    var value = GetPropertyValue(sagaData, path);
-
-                    if (value == null)
-                    {
-                        return null;
-                    }
-
-                    return $"{path} eq '{value.ToString()}'";
-                    //return new KeyValuePair<string, string>(path, value != null ? value.ToString() : null);
-                }).Union(
-                    new[] { $"SagaId eq '{sagaData.Id}'" }
-                );
-
-            var exists = tableClient.Query<TableEntity>(filter: string.Join(" or ", filter)).Any();
-            if (exists) {
-                throw new ConcurrencyException($"Saga data already exists!");
-            }*/
 
             var entity = ToTableEntity(sagaData, correlationProperties);
 
@@ -186,7 +157,7 @@ namespace Rebus.AzureTables.Sagas
         /// <param name="obj"></param>
         /// <param name="path"></param>
         /// <returns></returns>
-        public static object GetPropertyValue(object obj, string path)
+        private static object GetPropertyValue(object obj, string path)
         {
             var dots = path.Split('.');
 
@@ -209,7 +180,7 @@ namespace Rebus.AzureTables.Sagas
                 {
                     var value = GetPropertyValue(sagaData, path);
 
-                    return new KeyValuePair<string, string>(path, value != null ? value.ToString() : null);
+                    return new KeyValuePair<string, string>(path, value?.ToString());
                 })
                 .Where(kvp => kvp.Value != null)
                 .Union(new[] {

@@ -4,7 +4,6 @@ using Azure.Core;
 using Azure.Data.Tables;
 using Rebus.AzureTables.Sagas;
 using Rebus.AzureTables.Sagas.Serialization;
-using Rebus.Logging;
 using Rebus.Sagas;
 
 namespace Rebus.Config
@@ -178,10 +177,9 @@ namespace Rebus.Config
 
             configurer.Register(c =>
             {
-                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
                 var serializer = c.Has<ISagaSerializer>(false) ? c.Get<ISagaSerializer>() : new DefaultSagaSerializer();
                 var tableClientFactory = c.Get<ITableClientFactory>();
-                var sagaStorage = new TableStorageSagaStorage(tableClientFactory, serializer, rebusLoggerFactory);
+                var sagaStorage = new TableStorageSagaStorage(tableClientFactory, serializer);
 
                 return sagaStorage;
             });

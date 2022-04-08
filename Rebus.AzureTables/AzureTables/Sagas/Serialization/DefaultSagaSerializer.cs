@@ -1,13 +1,14 @@
 ﻿using Rebus.Sagas;
 using Rebus.Serialization;
 using System;
+using Rebus.Config;
 
 namespace Rebus.AzureTables.Sagas.Serialization
 {
     /// <summary>
     /// The default serializer for serializing sql saga data,
     /// Implement <seealso cref="ISagaSerializer"/> to make your own custom serializer and register it using the UseSagaSerializer extension method.
-    /// <seealso cref="Rebus.Config.SqlServerSagaConfigurationExtensions.UseSagaSerializer"/>
+    /// <seealso cref="AzureTablesSagaStorageConfigurationExtensions.UseSagaSerializer"/>
     /// </summary>
     public class DefaultSagaSerializer : ObjectSerializer, ISagaSerializer
     {
