@@ -3,7 +3,7 @@ using System;
 
 namespace Rebus.AzureTables.Sagas
 {
-    public class AutoCreateTTableSharedKeyCredentialTableClientFactory : AutoCreateTableClientFactory
+    class AutoCreateTTableSharedKeyCredentialTableClientFactory : AutoCreateTableClientFactory
     {
         public AutoCreateTTableSharedKeyCredentialTableClientFactory(Uri endpoint, TableSharedKeyCredential credential)
         {

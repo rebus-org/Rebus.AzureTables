@@ -2,7 +2,7 @@
 
 namespace Rebus.AzureTables.Sagas
 {
-    public class AutoCreateConnectionStringTableClientFactory : AutoCreateTableClientFactory
+    class AutoCreateConnectionStringTableClientFactory : AutoCreateTableClientFactory
     {
         public AutoCreateConnectionStringTableClientFactory(string connectionString)
         {

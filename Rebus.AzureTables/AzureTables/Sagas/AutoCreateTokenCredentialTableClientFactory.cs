@@ -4,7 +4,7 @@ using System;
 
 namespace Rebus.AzureTables.Sagas
 {
-    public class AutoCreateTokenCredentialTableClientFactory : AutoCreateTableClientFactory
+    class AutoCreateTokenCredentialTableClientFactory : AutoCreateTableClientFactory
     {
         public AutoCreateTokenCredentialTableClientFactory(Uri endpoint, TokenCredential credential)
         {

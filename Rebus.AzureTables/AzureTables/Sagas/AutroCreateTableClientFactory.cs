@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Rebus.AzureTables.Sagas
 {
-    public abstract class AutoCreateTableClientFactory : ITableClientFactory
+    abstract class AutoCreateTableClientFactory : ITableClientFactory
     {
         protected readonly Dictionary<Type, TableClient> TableClients = new();
 
