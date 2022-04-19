@@ -11,12 +11,13 @@ namespace Rebus.AzureTables.Sagas
             Default = client;
         }
 
-        protected TableClient Default { get; set; }
-        protected Dictionary<Type, TableClient> TableClients = new Dictionary<Type, TableClient>();
+        protected TableClient Default { get; }
+        protected Dictionary<Type, TableClient> TableClients = new();
 
         public TableClient GetTableClient(Type SagaDataType)
         {
-            if (TableClients.TryGetValue(SagaDataType, out TableClient tableClient)) {
+            if (TableClients.TryGetValue(SagaDataType, out TableClient tableClient))
+            {
                 return tableClient;
             }
             return Default;

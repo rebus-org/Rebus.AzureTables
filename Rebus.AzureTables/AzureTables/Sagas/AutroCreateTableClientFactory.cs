@@ -6,7 +6,7 @@ namespace Rebus.AzureTables.Sagas
 {
     public abstract class AutoCreateTableClientFactory : ITableClientFactory
     {
-        protected Dictionary<Type, TableClient> TableClients = new Dictionary<Type, TableClient>();
+        protected readonly Dictionary<Type, TableClient> TableClients = new();
 
         public TableClient GetTableClient(Type sagaDataType)
         {

@@ -9,9 +9,9 @@ namespace Rebus.AzureTables.Sagas
             ConnectionString = connectionString;
         }
 
-        protected string ConnectionString { get; set; }
+        protected string ConnectionString { get; }
 
-        public override TableClient CreateClient(string tableName) 
+        public override TableClient CreateClient(string tableName)
         {
             return new TableClient(ConnectionString, tableName);
         }

@@ -12,8 +12,8 @@ namespace Rebus.AzureTables.Sagas
             Credential = credential;
         }
 
-        protected Uri Endpoint { get; set; }
-        public TokenCredential Credential { get; set; }
+        protected Uri Endpoint { get; }
+        public TokenCredential Credential { get; }
 
         public override TableClient CreateClient(string tableName) 
         {

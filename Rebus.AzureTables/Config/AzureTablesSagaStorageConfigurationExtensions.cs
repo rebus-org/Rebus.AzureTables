@@ -5,6 +5,7 @@ using Azure.Data.Tables;
 using Rebus.AzureTables.Sagas;
 using Rebus.AzureTables.Sagas.Serialization;
 using Rebus.Sagas;
+// ReSharper disable UnusedMember.Global
 
 namespace Rebus.Config
 {
