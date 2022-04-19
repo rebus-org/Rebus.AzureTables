@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Rebus.AzureTables.Sagas
 {
-    public class TableClientFactory : ITableClientFactory
+    class TableClientFactory : ITableClientFactory
     {
         public TableClientFactory(TableClient client)
         {
@@ -14,18 +14,18 @@ namespace Rebus.AzureTables.Sagas
         protected TableClient Default { get; }
         protected Dictionary<Type, TableClient> TableClients = new();
 
-        public TableClient GetTableClient(Type SagaDataType)
+        public TableClient GetTableClient(Type sagaDataType)
         {
-            if (TableClients.TryGetValue(SagaDataType, out TableClient tableClient))
+            if (TableClients.TryGetValue(sagaDataType, out TableClient tableClient))
             {
                 return tableClient;
             }
             return Default;
         }
 
-        public void RegisterTableClient(Type SagaDataType, TableClient client)
+        public void RegisterTableClient(Type sagaDataType, TableClient client)
         {
-            TableClients.Add(SagaDataType, client);
+            TableClients.Add(sagaDataType, client);
         }
     }
 }

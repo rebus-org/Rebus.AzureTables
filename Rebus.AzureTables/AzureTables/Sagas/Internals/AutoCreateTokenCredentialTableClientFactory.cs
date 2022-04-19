@@ -1,8 +1,8 @@
-﻿using Azure.Core;
+﻿using System;
+using Azure.Core;
 using Azure.Data.Tables;
-using System;
 
-namespace Rebus.AzureTables.Sagas
+namespace Rebus.AzureTables.Sagas.Internals
 {
     class AutoCreateTokenCredentialTableClientFactory : AutoCreateTableClientFactory
     {

@@ -1,7 +1,7 @@
-﻿using Azure.Data.Tables;
-using System;
+﻿using System;
+using Azure.Data.Tables;
 
-namespace Rebus.AzureTables.Sagas
+namespace Rebus.AzureTables.Sagas.Internals
 {
     class AutoCreateTTableSharedKeyCredentialTableClientFactory : AutoCreateTableClientFactory
     {

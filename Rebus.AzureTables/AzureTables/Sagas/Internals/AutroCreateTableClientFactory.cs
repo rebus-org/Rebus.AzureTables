@@ -1,8 +1,8 @@
-﻿using Azure.Data.Tables;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using Azure.Data.Tables;
 
-namespace Rebus.AzureTables.Sagas
+namespace Rebus.AzureTables.Sagas.Internals
 {
     abstract class AutoCreateTableClientFactory : ITableClientFactory
     {

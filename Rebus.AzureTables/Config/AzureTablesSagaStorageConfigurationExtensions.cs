@@ -3,6 +3,7 @@ using Azure;
 using Azure.Core;
 using Azure.Data.Tables;
 using Rebus.AzureTables.Sagas;
+using Rebus.AzureTables.Sagas.Internals;
 using Rebus.AzureTables.Sagas.Serialization;
 using Rebus.Sagas;
 // ReSharper disable UnusedMember.Global
