@@ -8,6 +8,11 @@
 
 ## 0.0.3
 * Add direct dependency on Microsoft.Bcl.AsyncInterfaces to fix runtime error - thanks [kristofdegrave]
+
+## 0.0.4
+* Fix NuGet package XML
+
+
 ---
 
 [kristofdegrave]: https://github.com/kristofdegrave
