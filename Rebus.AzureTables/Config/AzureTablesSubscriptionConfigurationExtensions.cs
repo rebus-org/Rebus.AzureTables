@@ -22,7 +22,7 @@ public static class AzureTablesSubscriptionConfigurationExtensions {
   public static void StoreInAzureTables(this StandardConfigurer<ISubscriptionStorage> configurer, string connectionString, string tableName = "RebusSubscriptions", bool isCentralized = false, bool automaticallyCreateTable = false) {
     if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
-    configurer.StoreInAzureTables(new TableServiceClient(tableName), tableName, isCentralized, automaticallyCreateTable);
+    configurer.StoreInAzureTables(new TableServiceClient(connectionString), tableName, isCentralized, automaticallyCreateTable);
   }
 
   /// <summary>
