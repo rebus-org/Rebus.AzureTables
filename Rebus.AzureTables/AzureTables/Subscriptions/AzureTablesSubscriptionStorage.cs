@@ -8,7 +8,7 @@ using Rebus.Subscriptions;
 
 namespace Rebus.AzureTables.Subscriptions;
 /// <summary>
-/// Implementation of <see cref="ISubscriptionStorage"/> that uses Azure tables (either Azure Cosmos Db Table Api or Azure Table Storage) to store subscriptions
+/// Implementation of <see cref="ISubscriptionStorage"/> that uses Azure tables (either Azure Cosmos DB Table Api or Azure Table Storage) to store subscriptions
 /// </summary>
 public class AzureTablesSubscriptionStorage : ISubscriptionStorage, IInitializable {
   private readonly TableClient _tableClient;
