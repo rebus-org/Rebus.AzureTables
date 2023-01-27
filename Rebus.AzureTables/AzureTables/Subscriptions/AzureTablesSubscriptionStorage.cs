@@ -56,7 +56,7 @@ public class AzureTablesSubscriptionStorage : ISubscriptionStorage, IInitializab
       await client.UpsertEntityAsync(new TableEntity(topic, subscriberAddress));
     }
     catch (RequestFailedException ex) {
-      throw new RebusApplicationException(ex, $"Could not subscriber {subscriberAddress} to '{topic}'");
+      throw new RebusApplicationException(ex, $"Could not subscribe {subscriberAddress} to '{topic}'");
     }
   }
 
