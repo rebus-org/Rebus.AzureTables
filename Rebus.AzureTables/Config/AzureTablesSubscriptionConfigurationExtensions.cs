@@ -17,7 +17,7 @@ public static class AzureTablesSubscriptionConfigurationExtensions {
   /// <param name="connectionString">Azure Cosmos Db Tables or Azure Table Storage connection string including key</param>
   /// <param name="tableName">Name of the table where the subscriptions will be stored</param>
   /// <param name="isCentralized">True if this subscription storage is centralized (i.e. if subscribers can register themselves directly)</param>
-  /// <param name="automaticallyCreateTable">True if the storage table should be created if not exist</param>
+  /// <param name="automaticallyCreateTable">True if the storage table should be created if it does not exist</param>
   /// <exception cref="ArgumentNullException">Thrown when not all mandatory parameters are provided</exception>
   public static void StoreInAzureTables(this StandardConfigurer<ISubscriptionStorage> configurer, string connectionString, string tableName = "RebusSubscriptions", bool isCentralized = false, bool automaticallyCreateTable = false) {
     if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
