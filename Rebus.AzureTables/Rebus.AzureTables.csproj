@@ -17,10 +17,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Folder Include="Config\" />
-	</ItemGroup>
-
-	<ItemGroup>
 	  <None Include="..\artwork\little_rebusbus2_copy-500x500.png">
 	    <Pack>True</Pack>
 	    <PackagePath>\</PackagePath>
