@@ -12,8 +12,13 @@
 ## 0.0.4
 * Fix NuGet package XML
 
+## 0.0.5
+* Add tables-based subscription storage - thanks [jakubbohm] and [mirandaasm]
+
 
 ---
 
+[jakubbohm]: https://github.com/jakubbohm
 [kristofdegrave]: https://github.com/kristofdegrave
+[mirandaasm]: https://github.com/mirandaasm
 
