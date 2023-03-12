@@ -6,38 +6,20 @@ using Rebus.Tests.Contracts.Sagas;
 
 namespace Rebus.AzureTables.Tests.Contracts;
 
-public class AzureTablesSagaStorageFactory : ISagaStorageFactory
+public class AzureTablesSagaStorageFactory : AzureTableFactoryBase, ISagaStorageFactory
 {
-    const string DataTableName = "RebusSagaData";
     static readonly string ConnectionString = TsTestConfig.ConnectionString;
-
-    public AzureTablesSagaStorageFactory()
-    {
-        CleanUp();
-    }
 
     public ISagaStorage GetSagaStorage()
     {
-        var tableClient = new TableClient(ConnectionString, DataTableName);
+        var tableClient = new TableClient(ConnectionString, GetNextTableName());
         var factory = new TableClientFactory(tableClient);
         var storage = new TableStorageSagaStorage(factory, new DefaultSagaSerializer());
+
         tableClient.CreateIfNotExists();
 
         return storage;
     }
 
-    public void CleanUp()
-    {
-        try
-        {
-            var tableClient = new TableClient(ConnectionString, DataTableName);
-            tableClient.CreateIfNotExists();
-            var result = tableClient.Query<TableEntity>();
-            foreach (var item in result)
-            {
-                tableClient.DeleteEntity(item.PartitionKey, item.RowKey);
-            }
-        }
-        catch { }
-    }
+    public void CleanUp() => Dispose();
 }
