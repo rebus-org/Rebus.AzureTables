@@ -1,19 +1,18 @@
 ﻿using Azure.Data.Tables;
 
-namespace Rebus.AzureTables.Sagas.Internals
+namespace Rebus.AzureTables.Sagas.Internals;
+
+class AutoCreateConnectionStringTableClientFactory : AutoCreateTableClientFactory
 {
-    class AutoCreateConnectionStringTableClientFactory : AutoCreateTableClientFactory
+    public AutoCreateConnectionStringTableClientFactory(string connectionString)
     {
-        public AutoCreateConnectionStringTableClientFactory(string connectionString)
-        {
-            ConnectionString = connectionString;
-        }
+        ConnectionString = connectionString;
+    }
 
-        protected string ConnectionString { get; }
+    protected string ConnectionString { get; }
 
-        public override TableClient CreateClient(string tableName)
-        {
-            return new TableClient(ConnectionString, tableName);
-        }
+    public override TableClient CreateClient(string tableName)
+    {
+        return new TableClient(ConnectionString, tableName);
     }
 }

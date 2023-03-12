@@ -3,6 +3,7 @@ using Azure.Core;
 using Azure.Data.Tables;
 using Rebus.AzureTables.Subscriptions;
 using Rebus.Subscriptions;
+// ReSharper disable UnusedMember.Global
 
 namespace Rebus.Config;
 
@@ -75,6 +76,6 @@ public static class AzureTablesSubscriptionConfigurationExtensions
         if (configurer == null) throw new ArgumentNullException(nameof(configurer));
         if (tableClient == null) throw new ArgumentNullException(nameof(tableClient));
 
-        configurer.Register(context => new AzureTablesSubscriptionStorage(tableClient, isCentralized, automaticallyCreateTable));
+        configurer.Register(_ => new AzureTablesSubscriptionStorage(tableClient, isCentralized, automaticallyCreateTable));
     }
 }

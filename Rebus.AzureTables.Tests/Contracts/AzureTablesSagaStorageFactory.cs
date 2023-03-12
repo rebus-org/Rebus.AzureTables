@@ -4,41 +4,40 @@ using Rebus.AzureTables.Sagas.Serialization;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts.Sagas;
 
-namespace Rebus.AzureTables.Tests.Contracts
+namespace Rebus.AzureTables.Tests.Contracts;
+
+public class AzureTablesSagaStorageFactory : ISagaStorageFactory
 {
-    public class AzureTablesSagaStorageFactory : ISagaStorageFactory
+    const string DataTableName = "RebusSagaData";
+    static readonly string ConnectionString = TsTestConfig.ConnectionString;
+
+    public AzureTablesSagaStorageFactory()
     {
-        const string DataTableName = "RebusSagaData";
-        static readonly string ConnectionString = TsTestConfig.ConnectionString;
+        CleanUp();
+    }
 
-        public AzureTablesSagaStorageFactory()
-        {
-            CleanUp();
-        }
+    public ISagaStorage GetSagaStorage()
+    {
+        var tableClient = new TableClient(ConnectionString, DataTableName);
+        var factory = new TableClientFactory(tableClient);
+        var storage = new TableStorageSagaStorage(factory, new DefaultSagaSerializer());
+        tableClient.CreateIfNotExists();
 
-        public ISagaStorage GetSagaStorage()
+        return storage;
+    }
+
+    public void CleanUp()
+    {
+        try
         {
             var tableClient = new TableClient(ConnectionString, DataTableName);
-            var factory = new TableClientFactory(tableClient);
-            var storage = new TableStorageSagaStorage(factory, new DefaultSagaSerializer());
             tableClient.CreateIfNotExists();
-
-            return storage;
-        }
-
-        public void CleanUp()
-        {
-            try
+            var result = tableClient.Query<TableEntity>();
+            foreach (var item in result)
             {
-                var tableClient = new TableClient(ConnectionString, DataTableName);
-                tableClient.CreateIfNotExists();
-                var result = tableClient.Query<TableEntity>();
-                foreach (var item in result)
-                {
-                    tableClient.DeleteEntity(item.PartitionKey, item.RowKey);
-                }
+                tableClient.DeleteEntity(item.PartitionKey, item.RowKey);
             }
-            catch { }
         }
+        catch { }
     }
 }

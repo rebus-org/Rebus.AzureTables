@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Azure;
 using Azure.Data.Tables;
@@ -12,24 +13,28 @@ namespace Rebus.AzureTables.Subscriptions;
 /// </summary>
 public class AzureTablesSubscriptionStorage : ISubscriptionStorage, IInitializable
 {
-    private readonly TableClient _tableClient;
-    private readonly bool _automaticallyCreateTable;
-    private bool _tableInitialized;
+    readonly TableClient _tableClient;
+    readonly bool _automaticallyCreateTable;
 
     /// <summary>
     /// Creates the subscription storage
     /// </summary>
     public AzureTablesSubscriptionStorage(TableClient tableClient, bool isCentralized = false, bool automaticallyCreateTable = false)
     {
-        _tableClient = tableClient;
-        IsCentralized = isCentralized;
+        _tableClient = tableClient ?? throw new ArgumentNullException(nameof(tableClient));
         _automaticallyCreateTable = automaticallyCreateTable;
+        IsCentralized = isCentralized;
     }
 
     /// <summary>
     /// Initializes the subscription storage by ensuring that the necessary table is created
     /// </summary>
-    public void Initialize() => GetTableClient().Wait();
+    public void Initialize()
+    {
+        if (!_automaticallyCreateTable) return;
+
+        _tableClient.CreateIfNotExists();
+    }
 
     /// <summary>
     /// Gets all subscribers by getting row IDs from the partition named after the given <paramref name="topic"/>
@@ -38,11 +43,12 @@ public class AzureTablesSubscriptionStorage : ISubscriptionStorage, IInitializab
     {
         try
         {
-            var client = await GetTableClient();
-            var items = client.QueryAsync<TableEntity>(s => s.PartitionKey == topic, select: new[] { "PartitionKey", "RowKey" });
+            var items = _tableClient.QueryAsync<TableEntity>(s => s.PartitionKey == topic, select: new[] { "PartitionKey", "RowKey" });
             var addresses = new List<string>();
             await foreach (var address in items)
+            {
                 addresses.Add(address.RowKey);
+            }
             return addresses.ToArray();
         }
         catch (RequestFailedException ex)
@@ -59,8 +65,7 @@ public class AzureTablesSubscriptionStorage : ISubscriptionStorage, IInitializab
     {
         try
         {
-            var client = await GetTableClient();
-            await client.UpsertEntityAsync(new TableEntity(topic, subscriberAddress));
+            await _tableClient.UpsertEntityAsync(new TableEntity(topic, subscriberAddress), mode: TableUpdateMode.Replace);
         }
         catch (RequestFailedException ex)
         {
@@ -76,12 +81,11 @@ public class AzureTablesSubscriptionStorage : ISubscriptionStorage, IInitializab
     {
         try
         {
-            var client = await GetTableClient();
-            await client.DeleteEntityAsync(topic, subscriberAddress);
+            await _tableClient.DeleteEntityAsync(topic, subscriberAddress);
         }
         catch (RequestFailedException ex)
         {
-            throw new RebusApplicationException(ex, $"Could not subscriber {subscriberAddress} to '{topic}'");
+            throw new RebusApplicationException(ex, $"Could not unsubscribe {subscriberAddress} from '{topic}'");
         }
     }
 
@@ -89,20 +93,4 @@ public class AzureTablesSubscriptionStorage : ISubscriptionStorage, IInitializab
     /// Gets whether this subscription storage is centralized (i.e. whether subscribers can register themselves directly)
     /// </summary>
     public bool IsCentralized { get; }
-
-    private async Task<TableClient> GetTableClient()
-    {
-        if (_automaticallyCreateTable && !_tableInitialized)
-            try
-            {
-                await _tableClient.CreateIfNotExistsAsync();
-                _tableInitialized = true;
-            }
-            catch (RequestFailedException ex)
-            {
-                throw new RebusApplicationException(ex, $"Could not create table '{_tableClient.Name}' for storing subscriptions");
-            }
-
-        return _tableClient;
-    }
 }

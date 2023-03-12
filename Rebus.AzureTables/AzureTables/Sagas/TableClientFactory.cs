@@ -2,30 +2,29 @@
 using System;
 using System.Collections.Generic;
 
-namespace Rebus.AzureTables.Sagas
+namespace Rebus.AzureTables.Sagas;
+
+class TableClientFactory : ITableClientFactory
 {
-    class TableClientFactory : ITableClientFactory
+    public TableClientFactory(TableClient client)
     {
-        public TableClientFactory(TableClient client)
-        {
-            Default = client;
-        }
+        Default = client;
+    }
 
-        protected TableClient Default { get; }
-        protected Dictionary<Type, TableClient> TableClients = new();
+    protected TableClient Default { get; }
+    protected Dictionary<Type, TableClient> TableClients = new();
 
-        public TableClient GetTableClient(Type sagaDataType)
+    public TableClient GetTableClient(Type sagaDataType)
+    {
+        if (TableClients.TryGetValue(sagaDataType, out TableClient tableClient))
         {
-            if (TableClients.TryGetValue(sagaDataType, out TableClient tableClient))
-            {
-                return tableClient;
-            }
-            return Default;
+            return tableClient;
         }
+        return Default;
+    }
 
-        public void RegisterTableClient(Type sagaDataType, TableClient client)
-        {
-            TableClients.Add(sagaDataType, client);
-        }
+    public void RegisterTableClient(Type sagaDataType, TableClient client)
+    {
+        TableClients.Add(sagaDataType, client);
     }
 }

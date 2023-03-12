@@ -1,31 +1,43 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Concurrent;
+using System.IO;
 using Azure.Data.Tables;
 using Rebus.AzureTables.Subscriptions;
 using Rebus.Subscriptions;
+using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Subscriptions;
 
-namespace Rebus.AzureTables.Tests.Contracts
+namespace Rebus.AzureTables.Tests.Contracts;
+
+public class AzureTablesSubscriptionStorageFactory : ISubscriptionStorageFactory
 {
-    public class AzureTablesSubscriptionStorageFactory : ISubscriptionStorageFactory
+    static readonly string ConnectionString = TsTestConfig.ConnectionString;
+
+    readonly ConcurrentStack<IDisposable> _disposables = new();
+
+    public ISubscriptionStorage Create()
     {
-        const string DataTableName = "RebusSubscriptionData";
-        static readonly string ConnectionString = TsTestConfig.ConnectionString;
+        var subscriptionStorage = new AzureTablesSubscriptionStorage(CreateClient(), automaticallyCreateTable: true);
+        subscriptionStorage.Initialize();
+        return subscriptionStorage;
+    }
 
-        public AzureTablesSubscriptionStorageFactory() => CreateClient().CreateIfNotExists();
+    int counter = 1;
 
-        public ISubscriptionStorage Create() => new AzureTablesSubscriptionStorage(CreateClient());
+    TableClient CreateClient()
+    {
+        var tableName = $"table{counter++:00000}";
 
-        public void Cleanup()
+        _disposables.Push(new TableDeleter(tableName));
+
+        return new TableClient(ConnectionString, tableName);
+    }
+
+    public void Cleanup()
+    {
+        while (_disposables.TryPop(out var disposable))
         {
-            // Cannot drop the table as creation of the table in subsequent tests would fail with 429 Conflict (TableBeingDeleted) for few minutes. Clearing the table instead.
-            var client = CreateClient();
-            var subscriptionsToDelete = new List<TableEntity>();
-            foreach (var entitity in client.Query<TableEntity>(select: new[] { "PartitionKey", "RowKey" }))
-                subscriptionsToDelete.Add(entitity);
-            foreach (var entity in subscriptionsToDelete)
-                client.DeleteEntity(entity.PartitionKey, entity.RowKey);
+            disposable.Dispose();
         }
-
-        private TableClient CreateClient() => new TableClient(ConnectionString, DataTableName);
     }
 }
