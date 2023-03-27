@@ -26,7 +26,7 @@
 	<ItemGroup>
 		<PackageReference Include="Azure.Data.Tables" Version="12.8.0" />
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
-		<PackageReference Include="rebus" Version="6.6.4" />
+		<PackageReference Include="rebus" Version="8.0.0-alpha01" />
 	</ItemGroup>
 
 </Project>

@@ -15,6 +15,8 @@
 ## 0.0.5
 * Add tables-based subscription storage - thanks [jakubbohm] and [mirandaasm]
 
+## 1.0.0-alpha01
+* Update to Rebus 8
 
 ---
 
