@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>netstandard2.0</TargetFramework>
+		<TargetFrameworks>netstandard2.0<;net5.0/TargetFrameworks>
 		<RootNamespace>Rebus</RootNamespace>
 		<LangVersion>11</LangVersion>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
@@ -30,8 +30,11 @@
 
 	<ItemGroup>
 		<PackageReference Include="Azure.Data.Tables" Version="12.8.2" />
-		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
 		<PackageReference Include="rebus" Version="8.0.1" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
 	</ItemGroup>
 
 </Project>
