@@ -18,6 +18,10 @@
 ## 1.0.0
 * Update to Rebus 8
 
+## 1.0.1
+* Fix bug that caused inability to throw concurrency exception in saga storage when a race was detected during delete
+
+
 ---
 
 [jakubbohm]: https://github.com/jakubbohm

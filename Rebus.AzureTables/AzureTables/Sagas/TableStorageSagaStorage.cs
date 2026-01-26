@@ -42,9 +42,9 @@ public class TableStorageSagaStorage : ISagaStorage
         {
             throw new ConcurrencyException($"Saga data with ID {sagaData.Id} does not exist!");
         }
-        if (Int32.TryParse(currentData.Value.GetString("Revision"), out var storedRevision) && currentRevision != storedRevision)
+        if (int.TryParse(currentData.Value.GetString("Revision"), out var storedRevision) && currentRevision != storedRevision)
         {
-            throw new ConcurrencyException($"Attempted to update saga data with ID {sagaData.Id} with revision {sagaData.Revision}, but the existing data was updated to revision {currentData.Value.GetInt32("Revision")}");
+            throw new ConcurrencyException($"Attempted to update saga data with ID {sagaData.Id} with revision {sagaData.Revision}, but the existing data was updated to revision {storedRevision}");
         }
         sagaData.Revision++; // Needed to be compliant with the tests.
         //await EnsureCreated();
@@ -120,7 +120,7 @@ public class TableStorageSagaStorage : ISagaStorage
             {
                 throw new ConcurrencyException($"Saga data with ID {sagaData.Id} does not exist!");
             }
-            if (Int32.TryParse(currentData.Value.GetString("Revision"), out var storedRevision) && currentRevision != storedRevision)
+            if (int.TryParse(currentData.Value.GetString("Revision"), out var storedRevision) && currentRevision != storedRevision)
             {
                 throw new ConcurrencyException($"Attempted to update saga data with ID {sagaData.Id} with revision {sagaData.Revision}, but the existing data was updated to revision {storedRevision}");
             }
