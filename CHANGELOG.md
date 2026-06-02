@@ -21,10 +21,18 @@
 ## 1.0.1
 * Fix bug that caused inability to throw concurrency exception in saga storage when a race was detected during delete
 
+## 1.1.0
+* Update to latest dependencies - thanks [simona-aveva]
+
 
 ---
 
 [jakubbohm]: https://github.com/jakubbohm
 [kristofdegrave]: https://github.com/kristofdegrave
 [mirandaasm]: https://github.com/mirandaasm
+[simona-aveva]: https://github.com/simona-aveva
+
+
+
+
 
